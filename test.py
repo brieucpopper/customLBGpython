@@ -1,3 +1,4 @@
+import random
 def formerCarres(tailleBloc,imArray):
   FORME_IMAGE=imArray.shape
 
@@ -251,18 +252,27 @@ def recreate_image(blocks, block_size=4, img_size=32):
 
 
 
-def quantizeImage(codebook,originalImg,size):
+def quantizeImage(codebook,originalImg,size,finalSize=32):
     #take an image and replace it block by block with the codebook
     #create the blocks
 
     blocks=formerCarresCouleur(size,originalImg)
 
+    print(blocks[0])
+    print(blocks[900])
+    print(blocks[1901])
+
     #quantize each block
     for i in range(len(blocks)):
         blocks[i]=codebook[closest_in_codebook(blocks[i],codebook)]
+
+        # if(random.randint(0,100)==0):
+        #     print("the current block is"+str(blocks[i]))
+        
+           
     
     #recreate the image
-    image=recreate_image(blocks,size,32)
+    image=recreate_image(blocks,size,finalSize)
     return image
 
 
@@ -367,7 +377,26 @@ def mainCode():
         codebook=importCodebookFromTxt("save1024.txt")
         print(codebook.shape)
         original=X_train[0]
-        img=quantizeImage(codebook,original,2)
+       # img=quantizeImage(codebook,original,2)
+
+        arrayLena=plt.imread("lena.png")
+        arrayLena=255*arrayLena
+        #arrayLena=X_train[0]
+        print(arrayLena.shape)
+        
+
+
+        lena=quantizeImage(codebook,arrayLena,2,finalSize=512)
+        print(lena.shape)
+
+        #print sample numbers in lena array
+        print(lena[0][0])
+        print(lena[0][1])
+        print(lena[0][2])
+        plt.imsave("lenaQuant.png",lena)
+
+
+
         print(img)
         print(img.shape)
         #save img as png
@@ -382,7 +411,7 @@ def mainCode():
 
         for i in range(num_images):
             original = X_train[i]
-            img = quantizeImage(codebook, original,2)
+            #img = quantizeImage(codebook, original,2)
 
             # Fill the big image with the original and reconstructed images
             big_image[i*image_size:(i+1)*image_size, :image_size] = original

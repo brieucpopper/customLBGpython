@@ -123,8 +123,8 @@ import random
 def LBGalgorithmOnCustomDataAndDraw(data,seuilStop,numberofCodebookVectors,renderDraw=False):
     #data has to be a list of vectors
 
-    
-    def draw():
+    uniquedrawid=0
+    def draw(drawid):
         if(renderDraw==False):
             return
         plt.figure()
@@ -141,7 +141,8 @@ def LBGalgorithmOnCustomDataAndDraw(data,seuilStop,numberofCodebookVectors,rende
         plt.scatter(xx, yy,color='blue')
 
         #save the figure as a png named iteration number.jpg
-        plt.savefig(str(len(codebook))+"_"+str(counter)+"plot.png")
+        plt.savefig(str(len(codebook))+"_"+"plot"+str(drawid)+".png")
+        
         
 
 
@@ -155,8 +156,8 @@ def LBGalgorithmOnCustomDataAndDraw(data,seuilStop,numberofCodebookVectors,rende
         print("the current codebook length is"+str(len(codebook)))
 
 
-        #save current codebook to a file named save.txt
-        np.savetxt("save.txt", codebook, delimiter=",")
+        #save current codebook to a file named save{len(codebook)}.txt
+        np.savetxt("save"+str(len(codebook))+".txt",codebook)
         print("the current codebook is"+str(codebook))
 
 
@@ -170,7 +171,8 @@ def LBGalgorithmOnCustomDataAndDraw(data,seuilStop,numberofCodebookVectors,rende
         #split in two each vector from the codebook
         eps=creerEpsilon(len(codebook[0]))
         newCodebook=[]
-        draw()
+        draw(uniquedrawid)
+        uniquedrawid+=1
         for c in codebook:
             newCodebook.append(c+eps)
             newCodebook.append(c-eps)
@@ -182,7 +184,8 @@ def LBGalgorithmOnCustomDataAndDraw(data,seuilStop,numberofCodebookVectors,rende
         while(abs(oldDistorsion-currentDistorsion)>seuilStop):
             
             counter+=1
-            draw()
+            draw(uniquedrawid)
+            uniquedrawid+=1
             print(currentDistorsion-oldDistorsion)
             print("is the current distorsion-oldDistorsion")
             
@@ -219,12 +222,14 @@ def LBGalgorithmOnCustomDataAndDraw(data,seuilStop,numberofCodebookVectors,rende
             currentDistorsion=calculateDistorsion(blockVectors,codebook)
             #print("ending while loop")
     #print("the final codebook length is"+str(len(codebook)))
+    draw(uniquedrawid)
+    np.savetxt("save"+str(len(codebook))+".txt",codebook)
 
 
 
 
 def importCodebookFromTxt(filename):
-    codebook=np.loadtxt(filename, delimiter=",")
+    codebook=np.loadtxt(filename, delimiter=" ")
     return codebook
 
 
@@ -265,7 +270,7 @@ def quantizeImage(codebook,originalImg,size):
 
 
 def mainCode():
-            # image = Image.open('lena.png')
+    # image = Image.open('lena.png')
 
     # image_gray=image.convert("L")
     # grayArray = np.asarray(image_gray)
@@ -277,103 +282,126 @@ def mainCode():
 
 
 
-    #delete all files in the folder than end with plot.png
-    # import os
-    # import glob
-    # files = glob.glob('*plot.png')
-    # for f in files:
-    #     os.remove(f)
+    
     
 
 
+    def renderPlots():
+        num_points = 30
+        num_centroids = 4
 
-    # num_points = 30
-    # num_centroids = 4
+        # Define the centroids
+        centroids = np.array([[0, 0], [8, 8], [0, 8], [8, 0]])
 
-    # # Define the centroids
-    # centroids = np.array([[0, 0], [8, 8], [0, 8], [8, 0]])
+        # Generate random points around the centroids
+        points = []
+        for centroid in centroids:
+            #change random seed for np
+            
+            points.extend(1.2*np.random.randn(num_points // num_centroids, 2) + centroid)
 
-    # # Generate random points around the centroids
-    # points = []
-    # for centroid in centroids:
-    #     #change random seed for np
+        visuarray = np.array(points)
+
         
-    #     points.extend(1*np.random.randn(num_points // num_centroids, 2) + centroid)
 
-    # visuarray = np.array(points)
-
-
+        #delete all files in the folder than end with =.png
+        import os
+        import glob
+        files = glob.glob('*.png')
+        for f in files:
+            os.remove(f)
+        LBGalgorithmOnCustomDataAndDraw(visuarray,2,8,renderDraw=True)
 
 
 
     from tensorflow.keras.datasets import cifar10
 
-    # Load the CIFAR-10 dataset
+        # Load the CIFAR-10 dataset
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
 
-    # # Access and use the loaded dataset
-    # # Example: Print the shapes of the datasets
-    # print("Training set: X_train shape =", X_train.shape, ", y_train shape =", y_train.shape)
-    # print("Test set: X_test shape =", X_test.shape, ", y_test shape =", y_test.shape)
-
-    # X_train=X_train[:100]
 
 
-    # trainingBlocs=[]
+    def trainOnCifar10(set):
+        #saves to a txt files the different codebooks
+        #dleete all files in the folder than end with =.txt
+        import os
+        import glob
+        files = glob.glob('save*.txt')
+        for f in files:
+            os.remove(f)
+        
+        
 
-    # progress=0
-    # for i in X_train:
-    #     blocsForImage=formerCarresCouleur(2,i)
-    #     trainingBlocs.extend(blocsForImage)
-    #     progress+=1
-
-    #     if(progress%200==0):
-    #         print("progress:"+str(progress))
-
-    # trainingBlocs=np.array(trainingBlocs)
-    # #get info on this array
-    # print(trainingBlocs.shape)
-
-
-
-    # LBGalgorithmOnCustomDataAndDraw(trainingBlocs,100,512)
-    codebook=importCodebookFromTxt("save.txt")
-    print(codebook.shape)
-    original=X_train[0]
-    img=quantizeImage(codebook,original,2)
-    print(img)
-    print(img.shape)
-    #save img as png
-    plt.imsave("img.png",img)
-
-    plt.imsave("original.png",original)
-    num_images = 10
-    #create an empty big_image
-
-    image_size = 32
-    big_image = np.zeros((image_size*num_images, image_size*2, 3), dtype=np.uint8)
-
-    for i in range(num_images):
-        original = X_train[i]
-        img = quantizeImage(codebook, original,2)
-
-        # Fill the big image with the original and reconstructed images
-        big_image[i*image_size:(i+1)*image_size, :image_size] = original
-        big_image[i*image_size:(i+1)*image_size, image_size:] = img
-
-        # # Save the original and reconstructed images as PNG files
-        # plt.imsave(f"original{i}.png", original)
-        # plt.imsave(f"img{i}.png", img)
-
-    # Display the big image using matplotlib
-    plt.imsave("big_image.png",big_image)
+        # Access and use the loaded dataset
+        # Example: Print the shapes of the datasets
+        X_train=set[:100]
 
 
-    #display the quantized 2x2 blocks
-    #recreate_image(blocks, block_size=4, img_size=32):
+        
 
-    imgOfCodebook=recreate_image(codebook,2,32)
-    plt.imsave("codebook.png",imgOfCodebook)
+
+        trainingBlocs=[]
+
+        progress=0
+        for i in X_train:
+            blocsForImage=formerCarresCouleur(2,i)
+            trainingBlocs.extend(blocsForImage)
+            progress+=1
+
+            if(progress%200==0):
+                print("progress:"+str(progress))
+
+        trainingBlocs=np.array(trainingBlocs)
+        #get info on this array
+        print(trainingBlocs.shape)
+
+
+
+        LBGalgorithmOnCustomDataAndDraw(trainingBlocs,100,1024)
+
+
+
+    #trainOnCifar10(X_train)
+
+    def openFromSave():
+        codebook=importCodebookFromTxt("save1024.txt")
+        print(codebook.shape)
+        original=X_train[0]
+        img=quantizeImage(codebook,original,2)
+        print(img)
+        print(img.shape)
+        #save img as png
+        plt.imsave("img.png",img)
+
+        plt.imsave("original.png",original)
+        num_images = 10
+        #create an empty big_image
+
+        image_size = 32
+        big_image = np.zeros((image_size*num_images, image_size*2, 3), dtype=np.uint8)
+
+        for i in range(num_images):
+            original = X_train[i]
+            img = quantizeImage(codebook, original,2)
+
+            # Fill the big image with the original and reconstructed images
+            big_image[i*image_size:(i+1)*image_size, :image_size] = original
+            big_image[i*image_size:(i+1)*image_size, image_size:] = img
+
+            # # Save the original and reconstructed images as PNG files
+            # plt.imsave(f"original{i}.png", original)
+            # plt.imsave(f"img{i}.png", img)
+
+        # Display the big image using matplotlib
+        plt.imsave("big_image.png",big_image)
+
+
+        #display the quantized 2x2 blocks
+        #recreate_image(blocks, block_size=4, img_size=32):
+
+        imgOfCodebook=recreate_image(codebook,2,64)
+        plt.imsave("codebook.png",imgOfCodebook)
+    openFromSave()
 
 
 
